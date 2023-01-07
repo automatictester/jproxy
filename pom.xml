@@ -1,0 +1,319 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+
+   <groupId>uk.co.automatictester</groupId>
+   <artifactId>jproxy</artifactId>
+   <version>1.0.0-SNAPSHOT</version>
+   <modelVersion>4.0.0</modelVersion>
+   <packaging>jar</packaging>
+   <name>JProxy</name>
+   <description>Java TCP proxy for simulating network conditions in integration testing</description>
+   <url>https://github.com/automatictester/jproxy</url>
+   <inceptionYear>2023</inceptionYear>
+
+   <licenses>
+      <license>
+         <name>MIT License</name>
+         <url>https://opensource.org/licenses/mit-license.php</url>
+         <distribution>repo</distribution>
+      </license>
+   </licenses>
+
+   <developers>
+      <developer>
+         <name>Ireneusz Pastusiak</name>
+         <email>ireneusz.pastusiak@gmail.com</email>
+         <organizationUrl>https://github.com/automatictester</organizationUrl>
+      </developer>
+   </developers>
+
+   <scm>
+      <connection>scm:git:git@github.com:automatictester/jproxy.git</connection>
+      <developerConnection>scm:git:git@github.com:automatictester/jproxy.git</developerConnection>
+      <url>git@github.com:automatictester/jproxy.git</url>
+      <tag>HEAD</tag>
+   </scm>
+
+   <properties>
+      <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+      <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+      <surefire.failsafe.version>2.22.2</surefire.failsafe.version>
+   </properties>
+
+   <build>
+      <plugins>
+
+         <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-enforcer-plugin</artifactId>
+            <version>3.1.0</version>
+            <executions>
+               <execution>
+                  <id>enforce</id>
+                  <goals>
+                     <goal>enforce</goal>
+                  </goals>
+                  <configuration>
+                     <rules>
+                        <banDuplicatePomDependencyVersions/>
+                        <requireProfileIdsExist/>
+                        <requireReleaseDeps/>
+                     </rules>
+                  </configuration>
+               </execution>
+            </executions>
+         </plugin>
+
+         <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-compiler-plugin</artifactId>
+            <version>3.10.1</version>
+            <configuration>
+               <source>1.8</source>
+               <target>1.8</target>
+            </configuration>
+         </plugin>
+
+         <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-surefire-plugin</artifactId>
+            <version>${surefire.failsafe.version}</version>
+         </plugin>
+
+         <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-failsafe-plugin</artifactId>
+            <version>${surefire.failsafe.version}</version>
+            <executions>
+               <execution>
+                  <id>generic-it</id>
+                  <goals>
+                     <goal>integration-test</goal>
+                     <goal>verify</goal>
+                  </goals>
+                  <configuration>
+                     <excludes>
+                        <exclude>**/ResourceLeakIT</exclude>
+                     </excludes>
+                  </configuration>
+               </execution>
+               <execution>
+                  <id>resource-it</id>
+                  <goals>
+                     <goal>integration-test</goal>
+                     <goal>verify</goal>
+                  </goals>
+                  <configuration>
+                     <includes>
+                        <include>**/ResourceLeakIT</include>
+                     </includes>
+                  </configuration>
+               </execution>
+            </executions>
+         </plugin>
+
+         <plugin>
+            <groupId>org.sonatype.plugins</groupId>
+            <artifactId>nexus-staging-maven-plugin</artifactId>
+            <version>1.6.13</version>
+            <extensions>true</extensions>
+            <configuration>
+               <serverId>ossrh</serverId>
+               <nexusUrl>https://oss.sonatype.org/</nexusUrl>
+               <autoReleaseAfterClose>true</autoReleaseAfterClose>
+               <autoDropAfterRelease>true</autoDropAfterRelease>
+            </configuration>
+         </plugin>
+
+      </plugins>
+   </build>
+
+   <profiles>
+
+      <profile>
+         <id>load</id>
+         <build>
+            <plugins>
+
+               <plugin>
+                  <groupId>io.gatling</groupId>
+                  <artifactId>gatling-maven-plugin</artifactId>
+                  <version>4.2.9</version>
+                  <executions>
+                     <execution>
+                        <goals>
+                           <goal>test</goal>
+                        </goals>
+                        <phase>verify</phase>
+                     </execution>
+                  </executions>
+                  <configuration>
+                     <runMultipleSimulations>true</runMultipleSimulations>
+                     <includes>
+                        <include>uk.co.automatictester.jproxy.load.simulation.*</include>
+                     </includes>
+                  </configuration>
+               </plugin>
+
+            </plugins>
+         </build>
+      </profile>
+
+      <profile>
+         <id>release</id>
+         <build>
+            <plugins>
+
+               <plugin>
+                  <groupId>org.apache.maven.plugins</groupId>
+                  <artifactId>maven-enforcer-plugin</artifactId>
+                  <dependencies>
+                     <dependency>
+                        <groupId>uk.co.automatictester</groupId>
+                        <artifactId>enforcer-rules</artifactId>
+                        <version>1.0.0</version>
+                     </dependency>
+                  </dependencies>
+                  <executions>
+                     <execution>
+                        <id>enforce-release</id>
+                        <goals>
+                           <goal>enforce</goal>
+                        </goals>
+                        <configuration>
+                           <rules>
+                              <requireVersionPattern
+                                      implementation="uk.co.automatictester.enforcer.rules.RequireVersionPattern">
+                                 <versionPattern>^\d+\.\d+\.\d+$</versionPattern>
+                              </requireVersionPattern>
+                           </rules>
+                        </configuration>
+                     </execution>
+                  </executions>
+               </plugin>
+
+               <plugin>
+                  <groupId>org.apache.maven.plugins</groupId>
+                  <artifactId>maven-source-plugin</artifactId>
+                  <version>3.2.1</version>
+                  <executions>
+                     <execution>
+                        <id>attach-sources</id>
+                        <goals>
+                           <goal>jar-no-fork</goal>
+                        </goals>
+                     </execution>
+                  </executions>
+               </plugin>
+
+               <plugin>
+                  <groupId>org.apache.maven.plugins</groupId>
+                  <artifactId>maven-javadoc-plugin</artifactId>
+                  <version>3.4.1</version>
+                  <executions>
+                     <execution>
+                        <id>attach-javadocs</id>
+                        <goals>
+                           <goal>jar</goal>
+                        </goals>
+                     </execution>
+                  </executions>
+               </plugin>
+
+               <plugin>
+                  <groupId>org.apache.maven.plugins</groupId>
+                  <artifactId>maven-gpg-plugin</artifactId>
+                  <version>1.6</version>
+                  <executions>
+                     <execution>
+                        <id>sign-artifacts</id>
+                        <phase>verify</phase>
+                        <goals>
+                           <goal>sign</goal>
+                        </goals>
+                        <configuration>
+                           <gpgArguments>
+                              <arg>--pinentry-mode</arg>
+                              <arg>loopback</arg>
+                           </gpgArguments>
+                        </configuration>
+                     </execution>
+                  </executions>
+               </plugin>
+
+               <plugin>
+                  <groupId>org.codehaus.mojo</groupId>
+                  <artifactId>versions-maven-plugin</artifactId>
+                  <version>2.14.2</version>
+               </plugin>
+
+            </plugins>
+         </build>
+      </profile>
+
+   </profiles>
+
+   <dependencies>
+      <dependency>
+         <groupId>org.slf4j</groupId>
+         <artifactId>slf4j-simple</artifactId>
+         <version>2.0.6</version>
+      </dependency>
+      <dependency>
+         <groupId>org.projectlombok</groupId>
+         <artifactId>lombok</artifactId>
+         <version>1.18.24</version>
+         <scope>provided</scope>
+      </dependency>
+      <dependency>
+         <groupId>org.testng</groupId>
+         <artifactId>testng</artifactId>
+         <version>7.5</version>
+         <scope>test</scope>
+      </dependency>
+      <dependency>
+         <groupId>org.assertj</groupId>
+         <artifactId>assertj-core</artifactId>
+         <version>3.23.1</version>
+         <scope>test</scope>
+      </dependency>
+      <dependency>
+         <groupId>com.github.tomakehurst</groupId>
+         <artifactId>wiremock-jre8</artifactId>
+         <version>2.35.0</version>
+         <scope>test</scope>
+      </dependency>
+      <dependency>
+         <groupId>io.rest-assured</groupId>
+         <artifactId>rest-assured</artifactId>
+         <version>5.3.0</version>
+         <scope>test</scope>
+      </dependency>
+      <dependency>
+         <groupId>io.gatling.highcharts</groupId>
+         <artifactId>gatling-charts-highcharts</artifactId>
+         <version>3.9.0</version>
+         <scope>test</scope>
+         <exclusions>
+            <exclusion>
+               <groupId>ch.qos.logback</groupId>
+               <artifactId>logback-classic</artifactId>
+            </exclusion>
+         </exclusions>
+      </dependency>
+   </dependencies>
+
+   <distributionManagement>
+      <snapshotRepository>
+         <id>ossrh</id>
+         <url>https://oss.sonatype.org/content/repositories/snapshots</url>
+      </snapshotRepository>
+      <repository>
+         <id>ossrh</id>
+         <url>https://oss.sonatype.org/service/local/staging/deploy/maven2/</url>
+      </repository>
+   </distributionManagement>
+
+</project>
