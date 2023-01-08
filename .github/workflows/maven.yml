@@ -15,5 +15,5 @@ jobs:
         with:
           java-version: ${{ matrix.java }}
           distribution: 'corretto'
-      - name: mvn clean verify
+      - name: mvn clean verify -P load
         run: mvn --batch-mode --update-snapshots clean verify
