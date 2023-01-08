@@ -2,6 +2,7 @@ version: 0.2
 
 env:
   shell: bash
+  git-credential-helper: yes
 
 phases:
   install:
@@ -14,13 +15,14 @@ phases:
       - echo "${GPG_KEY}" | base64 -d | gpg --no-tty --passphrase "${GPG_KEY_PASSPHRASE}" --pinentry-mode loopback --verbose --import
       - git config --global user.email "buildlogic.ci@gmail.com"
       - git config --global user.name "buildlogic-ci"
+      - git checkout master
   build:
     commands:
       - mvn versions:set -DnewVersion="${RELEASE_VERSION}"
       - git add -A; git commit -m 'Release version bump'
       - mvn clean verify -P load
       - git tag "${RELEASE_VERSION}"
-      - if [ "${RELEASE}" = "true" ]; then mvn clean deploy -P release -Dgpg.passphrase="${GPG_KEY_PASSPHRASE}" -DskipTests; fi
+#      - if [ "${RELEASE}" = "true" ]; then mvn clean deploy -P release -Dgpg.passphrase="${GPG_KEY_PASSPHRASE}" -DskipTests; fi
       - mvn versions:set -DnewVersion="${POST_RELEASE_SNAPSHOT_VERSION}"
       - git add -A; git commit -m 'Post-release version bump'
       - if [ "${RELEASE}" = "true" ]; then git push --set-upstream origin master; git push --tags; fi
