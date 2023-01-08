@@ -14,6 +14,6 @@ jobs:
         uses: actions/setup-java@v2
         with:
           java-version: ${{ matrix.java }}
-          distribution: 'adopt'
+          distribution: 'corretto'
       - name: mvn clean verify
         run: mvn --batch-mode --update-snapshots clean verify
