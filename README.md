@@ -147,4 +147,4 @@ Below are sample exceptions thrown by `HttpsURLConnection.connect()` on `Disconn
 
 ## Supported Java versions
 
-Truststore Maven Plugin is tested against Java LTS versions 8, 11 and 17.
+JProxy is tested against Java LTS versions 8, 11 and 17.
