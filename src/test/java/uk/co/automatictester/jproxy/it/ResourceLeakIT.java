@@ -65,6 +65,7 @@ public class ResourceLeakIT {
             proxy.start();
             proxy.stop();
         }
+        Thread.sleep(1000);
         int currentThreadCountE = threadBean.getThreadCount();
         assertThat(currentThreadCountE).isEqualTo(currentThreadCountA);
         log.info("Current thread count E: {}", currentThreadCountE);
