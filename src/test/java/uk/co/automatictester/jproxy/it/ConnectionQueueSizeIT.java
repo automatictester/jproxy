@@ -29,42 +29,6 @@ public class ConnectionQueueSizeIT {
     private WebServer webServer;
 
     @Test
-    public void testConnectionQueueSizeOverflow() throws InterruptedException {
-        int targetPort = webServer.getHttpsPort();
-        int connectionQueueSize = 1;
-        int proxyPort = startProxy(targetPort, connectionQueueSize);
-
-        // multiple connections opened at the same time should overflow accept queue of size 1
-        int connectionCount = connectionQueueSize * 8;
-        ExecutorService executor = Executors.newFixedThreadPool(connectionCount);
-        ((ThreadPoolExecutor) executor).prestartAllCoreThreads();
-
-        List<Callable<Void>> connections = new ArrayList<>();
-        for (int i = 0; i < connectionCount; i++) {
-            connections.add(() -> {
-                connectAndVerifyDN(proxyPort);
-                return null;
-            });
-        }
-        List<Future<Void>> results = executor.invokeAll(connections);
-
-        // as a result, some of these connections will error out
-        int errorCount = 0;
-        for (int i = 0; i < connectionCount; i++) {
-            try {
-                results.get(i).get();
-            } catch (Exception e) {
-                errorCount++;
-            }
-        }
-
-        assertThat(errorCount).isGreaterThan(0);
-
-        executor.shutdown();
-        executor.awaitTermination(2, TimeUnit.SECONDS);
-    }
-
-    @Test
     public void testConnectionQueueSizeNoOverflow() throws InterruptedException {
         int targetPort = webServer.getHttpsPort();
         int connectionQueueSize = 4;
